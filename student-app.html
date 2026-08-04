@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSort Student App</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-glow: rgba(16, 185, 129, 0.5);
+            --secondary: #3b82f6;
+            --accent: #f59e0b;
+            --accent-glow: rgba(245, 158, 11, 0.5);
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --success: #22c55e;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', 'Outfit', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: var(--text-main);
+        }
+
+        .device {
+            width: 100%;
+            max-width: 400px;
+            height: 850px;
+            max-height: 100vh;
+            background-color: var(--bg-dark);
+            border: 12px solid #222;
+            border-radius: 40px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5), inset 0 0 10px rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 25px;
+            background-color: #222;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            z-index: 100;
+        }
+
+        .header {
+            padding: 40px 20px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, var(--bg-dark) 0%, transparent 100%);
+            z-index: 10;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header-profile {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: 700;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 100px; /* space for nav */
+            position: relative;
+        }
+
+        .content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+
+        /* Screen 1: Home */
+        .points-counter {
+            text-align: center;
+            margin: 10px 0 20px;
+        }
+        .points-counter h2 {
+            font-size: 3rem;
+            color: var(--primary);
+            text-shadow: 0 0 20px var(--primary-glow);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+        }
+        .points-counter p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+        
+        .badge-level {
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.2), transparent);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 8px 15px;
+            border-radius: 12px;
+            display: inline-block;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .tree-container {
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .tree {
+            width: 10px;
+            height: 100px;
+            background: #8b5a2b;
+            position: relative;
+            border-radius: 5px;
+        }
+
+        .leaves {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%) scale(0.6); /* 60% growth */
+            width: 100px;
+            height: 100px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 
+                -30px 10px 0 -10px var(--primary),
+                30px 10px 0 -10px var(--primary),
+                0 0 30px var(--primary-glow);
+            animation: breathe 3s infinite ease-in-out;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: translateX(-50%) scale(0.6) translateY(0); }
+            50% { transform: translateX(-50%) scale(0.62) translateY(-5px); }
+        }
+
+        .tree-text {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .tree-text span {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        .stat-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 15px 10px;
+            text-align: center;
+            flex: 1;
+        }
+        .stat-box i {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+        .stat-box .val {
+            font-size: 1.2rem;
+            font-weight: bold;
+            font-family: 'Outfit';
+        }
+        .stat-box .lbl {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Nav */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 15px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-muted);
+            text-decoration: none;
+            cursor: pointer;
+            transition: 0.3s;
+            width: 60px;
+        }
+
+        .nav-item i {
+            font-size: 1.2rem;
+            margin-bottom: 4px;
+            transition: 0.3s;
+        }
+        
+        .nav-item span {
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-item.active i {
+            transform: translateY(-5px);
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        /* Screen 2: Leaderboard */
+        .toggle-btn-group {
+            display: flex;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .toggle-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .toggle-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        .lb-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .lb-item:last-child {
+            border-bottom: none;
+        }
+        .lb-rank {
+            width: 30px;
+            font-weight: bold;
+            font-family: 'Outfit';
+            font-size: 1.1rem;
+        }
+        .lb-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            margin-left: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .lb-info {
+            flex: 1;
+        }
+        .lb-name {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .lb-badge {
+            font-size: 0.8rem;
+            color: var(--accent);
+        }
+        .lb-points {
+            font-weight: bold;
+            color: var(--primary);
+            font-family: 'Outfit';
+        }
+        .lb-item.current-user {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid var(--secondary);
+            border-radius: 12px;
+        }
+        .top-3 .lb-rank {
+            color: var(--accent);
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Screen 3: Challenges */
+        .challenge-active {
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .challenge-active::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 4px;
+            background: var(--primary);
+            box-shadow: 0 0 10px var(--primary);
+        }
+        .progress-bar-bg {
+            background: rgba(255,255,255,0.1);
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            background: var(--primary);
+            height: 100%;
+            width: 53%; /* 8/15 */
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--primary);
+        }
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .badge-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 15px 5px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        .badge-item.unlocked {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+        }
+        .badge-icon {
+            font-size: 2rem;
+            margin-bottom: 5px;
+            filter: grayscale(100%);
+            opacity: 0.5;
+        }
+        .badge-item.unlocked .badge-icon {
+            filter: grayscale(0%);
+            opacity: 1;
+        }
+        .badge-title {
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        /* Screen 4: Rewards */
+        .rewards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .reward-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .reward-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--secondary);
+        }
+        .reward-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            height: 40px;
+        }
+        .reward-cost {
+            font-weight: bold;
+            color: var(--accent);
+            font-family: 'Outfit';
+            margin-bottom: 15px;
+        }
+        .btn-redeem {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .btn-redeem:hover {
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+
+        /* Screen 5: Impact */
+        .impact-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .impact-box {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.9));
+            border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .impact-box i {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            font-size: 4rem;
+            opacity: 0.1;
+        }
+        .impact-val {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            font-family: 'Outfit';
+        }
+        .impact-lbl {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .btn-share {
+            background: linear-gradient(90deg, var(--secondary), #6366f1);
+            color: #fff;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1rem;
+            width: 100%;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Utilities */
+        .text-green { color: var(--primary); }
+        .mt-1 { margin-top: 10px; }
+        .mt-2 { margin-top: 20px; }
+        .mb-1 { margin-bottom: 10px; }
+        .mb-2 { margin-bottom: 20px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <div class="device">
+        <div class="notch"></div>
+        
+        <div class="header">
+            <div class="header-title" id="headerTitle">الرئيسية</div>
+            <div class="header-profile">أ</div>
+        </div>
+
+        <div class="content">
+            
+            <!-- SCREEN 1: Home -->
+            <div class="screen active" id="screen-home">
+                <div class="card" style="text-align: center; border: none; background: transparent; box-shadow: none;">
+                    <h3 style="font-size: 1.2rem; color: var(--text-muted);">مرحباً، أحمد! 🌱</h3>
+                    <div class="points-counter">
+                        <h2>1,250</h2>
+                        <p>نقطة</p>
+                    </div>
+                    <div class="badge-level">
+                        <i class="fas fa-trophy"></i> بطل الاستدامة - المستوى 5
+                    </div>
+                </div>
+
+                <div class="card tree-container">
+                    <div class="tree">
+                        <div class="leaves"></div>
+                    </div>
+                    <div class="tree-text">
+                        شجرتك نمت <span>60%</span> — باقي 40% وهنزرع شجرة حقيقية!
+                    </div>
+                </div>
+
+                <div class="card" style="border-right: 4px solid var(--primary);">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="background: rgba(16, 185, 129, 0.2); padding: 15px; border-radius: 50%; color: var(--primary);">
+                            <i class="fas fa-cloud" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <p style="font-weight: bold; line-height: 1.4;">وفّرت 12.5 كجم CO₂ هذا الشهر</p>
+                            <p style="font-size: 0.85rem; color: var(--text-muted);">ما يعادل شحن 850 هاتف محمول! 📱</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-row">
+                    <div class="stat-box">
+                        <i class="fas fa-recycle"></i>
+                        <div class="val">47</div>
+                        <div class="lbl">عدد المرات</div>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-weight-hanging"></i>
+                        <div class="val">8.3<span style="font-size:0.8rem">كجم</span></div>
+                        <div class="lbl">الكمية</div>
+                    </div>
+                    <div class="stat-box">
+                        <i class="fas fa-tree"></i>
+                        <div class="val">2</div>
+                        <div class="lbl">الأشجار</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 2: Leaderboard -->
+            <div class="screen" id="screen-leaderboard">
+                <div class="toggle-btn-group">
+                    <div class="toggle-btn active">الطلاب</div>
+                    <div class="toggle-btn">الكليات</div>
+                </div>
+
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div class="lb-item current-user">
+                        <div class="lb-rank">12</div>
+                        <div class="lb-avatar" style="background: var(--primary);">أ</div>
+                        <div class="lb-info">
+                            <div class="lb-name">أنت (أحمد)</div>
+                            <div class="lb-badge">بطل الاستدامة</div>
+                        </div>
+                        <div class="lb-points">1,250</div>
+                    </div>
+                    
+                    <div style="padding: 10px 15px; background: rgba(0,0,0,0.2); font-size: 0.8rem; text-align: center; color: var(--text-muted);">
+                        #12 من 1,847 طالب
+                    </div>
+
+                    <div class="lb-item top-3">
+                        <div class="lb-rank">1</div>
+                        <div class="lb-avatar"><i class="fas fa-user"></i></div>
+                        <div class="lb-info">
+                            <div class="lb-name">سارة محمد</div>
+                            <div class="lb-badge">نجم الاستدامة ⭐</div>
+                        </div>
+                        <div class="lb-points">3,420</div>
+                    </div>
+                    <div class="lb-item top-3">
+                        <div class="lb-rank">2</div>
+                        <div class="lb-avatar"><i class="fas fa-user"></i></div>
+                        <div class="lb-info">
+                            <div class="lb-name">عمر خالد</div>
+                            <div class="lb-badge">زارع أشجار 🌳</div>
+                        </div>
+                        <div class="lb-points">3,100</div>
+                    </div>
+                    <div class="lb-item top-3">
+                        <div class="lb-rank">3</div>
+                        <div class="lb-avatar"><i class="fas fa-user"></i></div>
+                        <div class="lb-info">
+                            <div class="lb-name">نور حسن</div>
+                            <div class="lb-badge">بطل الاستدامة</div>
+                        </div>
+                        <div class="lb-points">2,890</div>
+                    </div>
+                    <div class="lb-item">
+                        <div class="lb-rank">4</div>
+                        <div class="lb-avatar"><i class="fas fa-user"></i></div>
+                        <div class="lb-info">
+                            <div class="lb-name">محمود علي</div>
+                            <div class="lb-badge">ناشط بيئي</div>
+                        </div>
+                        <div class="lb-points">2,550</div>
+                    </div>
+                    <div class="lb-item">
+                        <div class="lb-rank">5</div>
+                        <div class="lb-avatar"><i class="fas fa-user"></i></div>
+                        <div class="lb-info">
+                            <div class="lb-name">ليلى طارق</div>
+                            <div class="lb-badge">ناشط بيئي</div>
+                        </div>
+                        <div class="lb-points">2,410</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 3: Challenges -->
+            <div class="screen" id="screen-challenges">
+                <div class="card challenge-active">
+                    <div class="flex-between">
+                        <h3 style="font-size: 1.1rem;">تحدي الأسبوع 🎯</h3>
+                        <span class="badge-level">+50 نقطة</span>
+                    </div>
+                    <p style="margin-top: 10px; font-size: 0.95rem;">ارمِ 15 زجاجة بلاستيك هذا الأسبوع</p>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill"></div>
+                    </div>
+                    <div class="flex-between mt-1">
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">باقي 3 أيام</span>
+                        <span style="font-weight: bold; font-family: 'Outfit';">8 / 15</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 15px; color: var(--text-muted);">التحديات اليومية</h3>
+                    
+                    <div class="flex-between mb-2">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center;">
+                            </div>
+                            <span>استخدم السلة الذكية 3 مرات</span>
+                        </div>
+                        <span style="font-weight: bold; font-family: 'Outfit';">1 / 3</span>
+                    </div>
+                    
+                    <div class="flex-between">
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-check" style="font-size: 0.7rem;"></i>
+                            </div>
+                            <span style="text-decoration: line-through; opacity: 0.5;">سجل دخول للتطبيق اليوم</span>
+                        </div>
+                        <span style="color: var(--primary); font-family: 'Outfit';">+5</span>
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1.1rem; margin-top: 25px;">الإنجازات</h3>
+                <div class="badges-grid">
+                    <div class="badge-item unlocked">
+                        <div class="badge-icon">🌱</div>
+                        <div class="badge-title">أول فرزة</div>
+                    </div>
+                    <div class="badge-item unlocked">
+                        <div class="badge-icon">🔥</div>
+                        <div class="badge-title">سلسلة 7 أيام</div>
+                    </div>
+                    <div class="badge-item unlocked">
+                        <div class="badge-icon">♻️</div>
+                        <div class="badge-title">100 عملية</div>
+                    </div>
+                    <div class="badge-item">
+                        <div class="badge-icon">🏆</div>
+                        <div class="badge-title">متصدر أسبوعي</div>
+                    </div>
+                    <div class="badge-item">
+                        <div class="badge-icon">🌳</div>
+                        <div class="badge-title">زارع أشجار</div>
+                    </div>
+                    <div class="badge-item">
+                        <div class="badge-icon">⭐</div>
+                        <div class="badge-title">نجم الاستدامة</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 4: Rewards -->
+            <div class="screen" id="screen-rewards">
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <p style="color: var(--text-muted); margin-bottom: 5px;">رصيد النقاط</p>
+                    <h2 style="font-size: 2.5rem; color: var(--accent); font-family: 'Outfit'; text-shadow: 0 0 20px var(--accent-glow);">1,250</h2>
+                </div>
+
+                <div class="rewards-grid">
+                    <div class="reward-card">
+                        <i class="fas fa-coffee reward-icon"></i>
+                        <div class="reward-title">خصم 20% كافيتريا الجامعة</div>
+                        <div class="reward-cost">200 نقطة</div>
+                        <button class="btn-redeem">استبدال</button>
+                    </div>
+                    <div class="reward-card">
+                        <i class="fas fa-mug-hot reward-icon" style="color: #ef4444;"></i>
+                        <div class="reward-title">قسيمة مشروب مجاني</div>
+                        <div class="reward-cost">150 نقطة</div>
+                        <button class="btn-redeem">استبدال</button>
+                    </div>
+                    <div class="reward-card">
+                        <i class="fas fa-book reward-icon" style="color: #8b5cf6;"></i>
+                        <div class="reward-title">خصم 30% المكتبة</div>
+                        <div class="reward-cost">300 نقطة</div>
+                        <button class="btn-redeem">استبدال</button>
+                    </div>
+                    <div class="reward-card">
+                        <i class="fas fa-tshirt reward-icon" style="color: var(--primary);"></i>
+                        <div class="reward-title">تي شيرت EcoSort حصري</div>
+                        <div class="reward-cost">500 نقطة</div>
+                        <button class="btn-redeem">استبدال</button>
+                    </div>
+                    <div class="reward-card">
+                        <i class="fas fa-certificate reward-icon" style="color: var(--accent);"></i>
+                        <div class="reward-title">شهادة بطل الاستدامة</div>
+                        <div class="reward-cost">1000 نقطة</div>
+                        <button class="btn-redeem">استبدال</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN 5: My Impact -->
+            <div class="screen" id="screen-impact">
+                <div class="impact-stats">
+                    <div class="impact-box">
+                        <i class="fas fa-cloud text-green"></i>
+                        <div class="impact-val text-green">45.2 <span style="font-size:1rem">كجم</span></div>
+                        <div class="impact-lbl">إجمالي CO₂ الموفر</div>
+                    </div>
+                    <div class="impact-box">
+                        <i class="fas fa-tree text-green"></i>
+                        <div class="impact-val text-green">2</div>
+                        <div class="impact-lbl">أشجار ساهمت بها</div>
+                    </div>
+                    <div class="impact-box">
+                        <i class="fas fa-recycle" style="color: var(--secondary);"></i>
+                        <div class="impact-val" style="color: var(--secondary);">23.7 <span style="font-size:1rem">كجم</span></div>
+                        <div class="impact-lbl">نفايات معاد تدويرها</div>
+                    </div>
+                    <div class="impact-box">
+                        <i class="fas fa-mobile-alt" style="color: var(--accent);"></i>
+                        <div class="impact-val" style="color: var(--accent);">3,066</div>
+                        <div class="impact-lbl">يعادل شحنة هاتف</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 15px; text-align: center;">تحليل نفاياتي</h3>
+                    <div class="chart-container">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 style="font-size: 1rem; margin-bottom: 15px; text-align: center;">مقارنة شهرية</h3>
+                    <div class="chart-container">
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <button class="btn-share">
+                    شارك أثرك على السوشيال ميديا <i class="fas fa-share-nodes"></i>
+                </button>
+                
+                <div style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: var(--text-muted);">
+                    <i class="fas fa-lightbulb text-green"></i> هل تعلم؟ إعادة تدوير طن من الورق يوفر 17 شجرة!
+                </div>
+            </div>
+
+        </div>
+
+        <div class="bottom-nav">
+            <a class="nav-item active" data-target="screen-home" data-title="الرئيسية">
+                <i class="fas fa-home"></i>
+                <span>الرئيسية</span>
+            </a>
+            <a class="nav-item" data-target="screen-leaderboard" data-title="المتصدرين">
+                <i class="fas fa-trophy"></i>
+                <span>المتصدرين</span>
+            </a>
+            <a class="nav-item" data-target="screen-challenges" data-title="التحديات">
+                <i class="fas fa-bullseye"></i>
+                <span>التحديات</span>
+            </a>
+            <a class="nav-item" data-target="screen-rewards" data-title="المكافآت">
+                <i class="fas fa-gift"></i>
+                <span>المكافآت</span>
+            </a>
+            <a class="nav-item" data-target="screen-impact" data-title="أثري البيئي">
+                <i class="fas fa-leaf"></i>
+                <span>أثري</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Navigation Logic
+        const navItems = document.querySelectorAll('.nav-item');
+        const screens = document.querySelectorAll('.screen');
+        const headerTitle = document.getElementById('headerTitle');
+
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                // Remove active class from all
+                navItems.forEach(nav => nav.classList.remove('active'));
+                screens.forEach(screen => screen.classList.remove('active'));
+
+                // Add active class to clicked
+                item.classList.add('active');
+                const targetId = item.getAttribute('data-target');
+                document.getElementById(targetId).classList.add('active');
+                
+                // Update title
+                headerTitle.innerText = item.getAttribute('data-title');
+
+                // Render charts if impact screen
+                if (targetId === 'screen-impact' && !window.chartsRendered) {
+                    renderCharts();
+                    window.chartsRendered = true;
+                }
+            });
+        });
+
+        // Initialize Charts (Chart.js)
+        function renderCharts() {
+            // Setup globals for dark mode
+            Chart.defaults.color = '#94a3b8';
+            Chart.defaults.font.family = "'Tajawal', sans-serif";
+
+            // Pie Chart
+            const ctxPie = document.getElementById('pieChart').getContext('2d');
+            new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['بلاستيك', 'ورق', 'معادن', 'زجاج'],
+                    datasets: [{
+                        data: [45, 30, 15, 10],
+                        backgroundColor: [
+                            '#3b82f6', // blue
+                            '#10b981', // green
+                            '#f59e0b', // yellow
+                            '#8b5cf6'  // purple
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', rtl: true }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            // Bar Chart
+            const ctxBar = document.getElementById('barChart').getContext('2d');
+            new Chart(ctxBar, {
+                type: 'bar',
+                data: {
+                    labels: ['مايو', 'يونيو', 'يوليو'],
+                    datasets: [{
+                        label: 'كمية النفايات (كجم)',
+                        data: [6.5, 7.2, 8.3],
+                        backgroundColor: '#10b981',
+                        borderRadius: 5,
+                        barThickness: 20
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

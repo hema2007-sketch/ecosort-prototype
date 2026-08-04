@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>محاكاة تفاعلية — سلة الفرز الذكية EcoSort</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --accent: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.8);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            --color-plastic: #3b82f6;
+            --color-paper: #e2e8f0;
+            --color-metal: #eab308;
+            --color-organic: #22c55e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.1), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.1), transparent 25%);
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(to bottom, rgba(15, 23, 42, 1), rgba(15, 23, 42, 0));
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(to left, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        h2 {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem;
+            gap: 2rem;
+            flex: 1;
+        }
+
+        /* LEFT SIDE - VISUALIZATION */
+        .visualization-panel {
+            flex: 6;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .bin-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--bg-card);
+            border-radius: 20px 20px 10px 10px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem 1rem;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Top Section */
+        .bin-top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .funnel {
+            width: 120px;
+            height: 40px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+        }
+
+        .funnel::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 30px;
+            background: rgba(255,255,255,0.05);
+            clip-path: polygon(0 0, 100% 0, 80% 100%, 20% 100%);
+        }
+
+        .falling-item {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2rem;
+            opacity: 0;
+            transition: all 0.5s ease;
+            z-index: 20;
+        }
+
+        .camera-module {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            background: rgba(0,0,0,0.4);
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .camera-icon {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            position: relative;
+        }
+
+        .scan-beam {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 0;
+            background: linear-gradient(to bottom, rgba(16, 185, 129, 0.5), transparent);
+            clip-path: polygon(50% 0, 100% 100%, 0 100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .scan-beam.active {
+            height: 100px;
+            opacity: 1;
+            animation: pulse-beam 1s infinite alternate;
+        }
+
+        @keyframes pulse-beam {
+            0% { opacity: 0.5; height: 80px; }
+            100% { opacity: 1; height: 120px; }
+        }
+
+        .lcd-screen {
+            background: #000;
+            color: #0f0;
+            font-family: monospace;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            border: 2px solid #333;
+            min-width: 150px;
+            text-align: center;
+            box-shadow: inset 0 0 10px rgba(0,255,0,0.2);
+        }
+
+        /* Middle Section - Rotating Disk */
+        .bin-middle {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+            perspective: 1000px;
+        }
+
+        .disk-container {
+            width: 250px;
+            height: 250px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(60deg);
+        }
+
+        .disk {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                rgba(59, 130, 246, 0.2) 0deg 90deg,
+                rgba(226, 232, 240, 0.2) 90deg 180deg,
+                rgba(234, 179, 8, 0.2) 180deg 270deg,
+                rgba(34, 197, 94, 0.2) 270deg 360deg
+            );
+            border: 4px solid rgba(255,255,255,0.3);
+            position: relative;
+            transition: transform 1s cubic-bezier(0.25, 1, 0.5, 1);
+            transform: rotate(0deg);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5), 0 10px 20px rgba(0,0,0,0.5);
+        }
+
+        .disk::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            background: #333;
+            border-radius: 50%;
+            border: 2px solid #555;
+        }
+
+        .hole {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: #000;
+            border-radius: 50%;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+        }
+
+        .disk-labels {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .label {
+            position: absolute;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 5px #000;
+        }
+        .label-plastic { top: 10%; right: 10%; }
+        .label-paper { bottom: 10%; right: 10%; }
+        .label-metal { bottom: 10%; left: 10%; }
+        .label-organic { top: 10%; left: 10%; }
+
+        /* Bottom Section - Compartments */
+        .bin-bottom {
+            display: flex;
+            gap: 10px;
+            height: 200px;
+            margin-top: 1rem;
+        }
+
+        .compartment {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+
+        .fill-level {
+            width: 100%;
+            height: 20%;
+            transition: height 0.5s ease;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            opacity: 0.7;
+        }
+
+        .comp-plastic .fill-level { background: var(--color-plastic); }
+        .comp-paper .fill-level { background: var(--color-paper); }
+        .comp-metal .fill-level { background: var(--color-metal); }
+        .comp-organic .fill-level { background: var(--color-organic); }
+
+        .comp-label {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.8rem;
+            color: #fff;
+            text-shadow: 0 0 3px #000;
+            z-index: 2;
+        }
+
+        .comp-percent {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 3px #000;
+            z-index: 2;
+        }
+
+        /* RIGHT SIDE - CONTROL PANEL */
+        .control-panel {
+            flex: 4;
+            min-width: 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel-card {
+            background: var(--bg-card);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Waste Selector Buttons */
+        .waste-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .waste-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 1rem;
+            color: var(--text-main);
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .waste-btn:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .waste-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .waste-btn.plastic:hover { border-color: var(--color-plastic); box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .waste-btn.paper:hover { border-color: var(--color-paper); box-shadow: 0 0 15px rgba(226, 232, 240, 0.4); }
+        .waste-btn.metal:hover { border-color: var(--color-metal); box-shadow: 0 0 15px rgba(234, 179, 8, 0.4); }
+        .waste-btn.organic:hover { border-color: var(--color-organic); box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
+
+        .waste-icon {
+            font-size: 2rem;
+        }
+
+        /* Process Steps */
+        .steps-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .step-item {
+            padding: 0.5rem;
+            border-radius: 5px;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+
+        .step-item.active {
+            color: #fff;
+            background: rgba(16, 185, 129, 0.2);
+            border-left: 3px solid var(--primary);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.1);
+            transform: translateX(-5px);
+        }
+
+        /* Live Data */
+        .data-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .data-item {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .data-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .data-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        .data-value.success { color: var(--primary); }
+        .data-value.warning { color: var(--accent); }
+
+        /* BOTTOM SECTION */
+        .bottom-section {
+            width: 100%;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+        }
+
+        .specs-panel, .arch-panel {
+            flex: 1;
+            min-width: 300px;
+            background: var(--bg-card);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th, td {
+            padding: 0.8rem;
+            text-align: right;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        th {
+            color: var(--primary);
+            font-weight: 600;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .arch-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .arch-node {
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--secondary);
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .arch-arrow {
+            color: var(--text-muted);
+        }
+        
+        .animated-point {
+            position: absolute;
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        @keyframes float-up {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(1.5); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>محاكاة تفاعلية — سلة الفرز الذكية EcoSort</h1>
+        <h2>مسار الابتكار الهندسي — هاكاثون الجامعة المصرية الصينية 2026</h2>
+    </header>
+
+    <div class="container">
+        <!-- LEFT SIDE - VISUALIZATION -->
+        <div class="visualization-panel">
+            <div class="bin-container" id="binContainer">
+                <div class="falling-item" id="fallingItem"></div>
+                
+                <div class="bin-top">
+                    <div class="funnel"></div>
+                    
+                    <div class="camera-module">
+                        <i class="fas fa-camera camera-icon" id="cameraIcon">
+                            <div class="scan-beam" id="scanBeam"></div>
+                        </i>
+                        <div class="lcd-screen" id="lcdScreen">READY</div>
+                    </div>
+                </div>
+
+                <div class="bin-middle">
+                    <div class="disk-container">
+                        <div class="disk" id="rotatingDisk">
+                            <div class="hole"></div>
+                            <div class="disk-labels">
+                                <div class="label label-plastic">0° بلاستيك</div>
+                                <div class="label label-paper">90° ورق</div>
+                                <div class="label label-metal">180° معادن</div>
+                                <div class="label label-organic">270° عضوي</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bin-bottom">
+                    <div class="compartment comp-plastic">
+                        <div class="comp-label">بلاستيك</div>
+                        <div class="fill-level" id="fillPlastic" style="height: 35%"></div>
+                        <div class="comp-percent" id="percPlastic">35%</div>
+                    </div>
+                    <div class="compartment comp-paper">
+                        <div class="comp-label">ورق</div>
+                        <div class="fill-level" id="fillPaper" style="height: 60%"></div>
+                        <div class="comp-percent" id="percPaper">60%</div>
+                    </div>
+                    <div class="compartment comp-metal">
+                        <div class="comp-label">معادن</div>
+                        <div class="fill-level" id="fillMetal" style="height: 15%"></div>
+                        <div class="comp-percent" id="percMetal">15%</div>
+                    </div>
+                    <div class="compartment comp-organic">
+                        <div class="comp-label">عضوي</div>
+                        <div class="fill-level" id="fillOrganic" style="height: 80%"></div>
+                        <div class="comp-percent" id="percOrganic">80%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE - CONTROL PANEL -->
+        <div class="control-panel">
+            
+            <div class="panel-card">
+                <div class="panel-title"><i class="fas fa-hand-holding"></i> إدخال مخلفات للتجربة</div>
+                <div class="waste-grid">
+                    <button class="waste-btn plastic" onclick="simulateSorting('plastic', '🥤', 'زجاجة بلاستيك', 0)">
+                        <span class="waste-icon">🥤</span>
+                        زجاجة بلاستيك
+                    </button>
+                    <button class="waste-btn paper" onclick="simulateSorting('paper', '📄', 'ورق مستعمل', 90)">
+                        <span class="waste-icon">📄</span>
+                        ورق مستعمل
+                    </button>
+                    <button class="waste-btn metal" onclick="simulateSorting('metal', '🥫', 'علبة كانز', 180)">
+                        <span class="waste-icon">🥫</span>
+                        علبة كانز
+                    </button>
+                    <button class="waste-btn organic" onclick="simulateSorting('organic', '🍌', 'قشر موز', 270)">
+                        <span class="waste-icon">🍌</span>
+                        قشر موز
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title"><i class="fas fa-cogs"></i> خطوات المعالجة</div>
+                <ul class="steps-list">
+                    <li class="step-item" id="step1">1. ✅ كشف وجود المخلف (IR Sensor)</li>
+                    <li class="step-item" id="step2">2. 📸 التقاط صورة (Pi Camera)</li>
+                    <li class="step-item" id="step3">3. 🤖 تصنيف بالذكاء الاصطناعي</li>
+                    <li class="step-item" id="step4">4. ⚙️ تدوير القرص للزاوية الصحيحة</li>
+                    <li class="step-item" id="step5">5. ⬇️ نزول المخلف بالجاذبية</li>
+                    <li class="step-item" id="step6">6. 📊 تحديث البيانات سحابياً</li>
+                    <li class="step-item" id="step7">7. ⭐ إضافة نقاط للطالب</li>
+                </ul>
+            </div>
+
+            <div class="panel-card">
+                <div class="panel-title"><i class="fas fa-chart-line"></i> البيانات المباشرة</div>
+                <div class="data-grid">
+                    <div class="data-item">
+                        <div class="data-label">دقة الذكاء الاصطناعي</div>
+                        <div class="data-value success" id="aiConf">--</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">زاوية القرص الحالية</div>
+                        <div class="data-value" id="currentAngle">0°</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">النوع المكتشف</div>
+                        <div class="data-value warning" id="detectedType">--</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">إجمالي النقاط</div>
+                        <div class="data-value success" id="totalPoints">450</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- BOTTOM SECTION -->
+    <div class="bottom-section">
+        <div class="specs-panel">
+            <div class="panel-title"><i class="fas fa-microchip"></i> المكونات التقنية (Hardware)</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>المكون</th>
+                        <th>الموديل</th>
+                        <th>الوظيفة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>وحدة المعالجة المركزية</td>
+                        <td>Raspberry Pi 4</td>
+                        <td>معالجة الصور وتشغيل نموذج الذكاء الاصطناعي</td>
+                    </tr>
+                    <tr>
+                        <td>المتحكم الدقيق</td>
+                        <td>Arduino Uno</td>
+                        <td>التحكم في المحركات واستقبال إشارات الحساسات</td>
+                    </tr>
+                    <tr>
+                        <td>الكاميرا</td>
+                        <td>Pi Camera V2</td>
+                        <td>التقاط صور المخلفات بجودة عالية</td>
+                    </tr>
+                    <tr>
+                        <td>المحرك</td>
+                        <td>MG996R Servo</td>
+                        <td>تدوير القرص للزاوية المطلوبة بدقة عالية</td>
+                    </tr>
+                    <tr>
+                        <td>حساس المسافة</td>
+                        <td>HC-SR04 x4</td>
+                        <td>قياس مستوى امتلاء كل حاوية داخلية</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="arch-panel">
+            <div class="panel-title"><i class="fas fa-network-wired"></i> بنية النظام (Architecture)</div>
+            <div class="arch-diagram">
+                <div class="arch-node">
+                    <i class="fas fa-camera mb-2 text-2xl"></i><br>Pi Camera
+                </div>
+                <div class="arch-arrow"><i class="fas fa-arrow-left"></i></div>
+                <div class="arch-node" style="border-color: var(--primary)">
+                    <i class="fas fa-brain mb-2 text-2xl"></i><br>Raspberry Pi<br><small>(AI Model)</small>
+                </div>
+                <div class="arch-arrow"><i class="fas fa-arrow-left"></i></div>
+                <div class="arch-node">
+                    <i class="fas fa-microchip mb-2 text-2xl"></i><br>Arduino
+                </div>
+                <div class="arch-arrow"><i class="fas fa-arrow-left"></i></div>
+                <div class="arch-node" style="border-color: var(--accent)">
+                    <i class="fas fa-cog mb-2 text-2xl"></i><br>Servo Motor
+                </div>
+            </div>
+            
+            <div class="arch-diagram" style="margin-top: 1rem;">
+                <div class="arch-node" style="border-color: var(--secondary)">
+                    <i class="fas fa-cloud mb-2 text-2xl"></i><br>Cloud App
+                </div>
+                <div class="arch-arrow"><i class="fas fa-arrow-up"></i></div>
+                <div class="arch-node">
+                    <i class="fas fa-wifi mb-2 text-2xl"></i><br>ESP32 (Wi-Fi)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isProcessing = false;
+        let currentRotation = 0;
+        let fillLevels = {
+            plastic: 35,
+            paper: 60,
+            metal: 15,
+            organic: 80
+        };
+        let points = 450;
+
+        function updateFillUI(type) {
+            document.getElementById(`fill${capitalize(type)}`).style.height = `${fillLevels[type]}%`;
+            document.getElementById(`perc${capitalize(type)}`).innerText = `${fillLevels[type]}%`;
+        }
+
+        function capitalize(s) {
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        function setStep(stepNum, active) {
+            const el = document.getElementById(`step${stepNum}`);
+            if (active) {
+                el.classList.add('active');
+            } else {
+                el.classList.remove('active');
+            }
+        }
+
+        function resetSteps() {
+            for(let i=1; i<=7; i++) setStep(i, false);
+        }
+
+        function disableButtons(disable) {
+            const btns = document.querySelectorAll('.waste-btn');
+            btns.forEach(btn => btn.disabled = disable);
+        }
+
+        function showFloatingPoints(pointsToAdd) {
+            const binTop = document.querySelector('.bin-top');
+            const ptEl = document.createElement('div');
+            ptEl.className = 'animated-point';
+            ptEl.innerText = `+${pointsToAdd}`;
+            ptEl.style.left = '50%';
+            ptEl.style.top = '10px';
+            ptEl.style.animation = 'float-up 1.5s forwards';
+            binTop.appendChild(ptEl);
+            setTimeout(() => ptEl.remove(), 1500);
+        }
+
+        async function simulateSorting(type, icon, name, targetAngle) {
+            if (isProcessing) return;
+            if (fillLevels[type] >= 100) {
+                alert('الحاوية ممتلئة! يرجى إفراغها أولاً.');
+                return;
+            }
+
+            isProcessing = true;
+            disableButtons(true);
+            resetSteps();
+            
+            const lcd = document.getElementById('lcdScreen');
+            const beam = document.getElementById('scanBeam');
+            const fallingItem = document.getElementById('fallingItem');
+            const disk = document.getElementById('rotatingDisk');
+
+            // Reset item
+            fallingItem.innerText = icon;
+            fallingItem.style.top = '-40px';
+            fallingItem.style.opacity = '1';
+            lcd.innerText = "DETECTING...";
+
+            // Sequence
+            setStep(1, true); // IR
+            await wait(400);
+
+            // Move item to camera view
+            fallingItem.style.top = '40px';
+            await wait(300);
+
+            setStep(2, true); // Camera
+            beam.classList.add('active');
+            await wait(1000);
+            beam.classList.remove('active');
+
+            setStep(3, true); // AI
+            const conf = (92 + Math.random() * 7).toFixed(1);
+            document.getElementById('aiConf').innerText = `${conf}%`;
+            document.getElementById('detectedType').innerText = name;
+            lcd.innerText = name;
+            await wait(600);
+
+            setStep(4, true); // Rotate
+            
+            // Calculate shortest rotation path
+            let diff = targetAngle - (currentRotation % 360);
+            if (diff > 180) diff -= 360;
+            if (diff < -180) diff += 360;
+            currentRotation += diff;
+            
+            disk.style.transform = `rotate(${currentRotation}deg)`;
+            document.getElementById('currentAngle').innerText = `${targetAngle}°`;
+            await wait(1200);
+
+            setStep(5, true); // Drop
+            fallingItem.style.top = '250px';
+            fallingItem.style.opacity = '0';
+            await wait(500);
+
+            // Increase fill
+            fillLevels[type] += Math.floor(Math.random() * 5) + 2;
+            if(fillLevels[type] > 100) fillLevels[type] = 100;
+            updateFillUI(type);
+
+            setStep(6, true); // Cloud
+            lcd.innerText = "UPDATING DB";
+            await wait(500);
+
+            setStep(7, true); // Points
+            const pts = 10;
+            points += pts;
+            document.getElementById('totalPoints').innerText = points;
+            showFloatingPoints(pts);
+            lcd.innerText = `+${pts} POINTS!`;
+            
+            await wait(1500);
+            
+            lcd.innerText = "READY";
+            resetSteps();
+            document.getElementById('aiConf').innerText = "--";
+            document.getElementById('detectedType').innerText = "--";
+            disableButtons(false);
+            isProcessing = false;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSort — نماذج أولية تفاعلية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%);
+            z-index: -1;
+            animation: bgPulse 8s ease-in-out infinite alternate;
+        }
+        @keyframes bgPulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1) rotate(5deg); }
+        }
+        .container { max-width: 900px; width: 100%; text-align: center; }
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #10b981, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            color: #94a3b8;
+            margin-bottom: 0.5rem;
+            animation: fadeInUp 0.8s ease-out 0.1s both;
+        }
+        .badge {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(59, 130, 246, 0.2));
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 0.4rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            color: #10b981;
+            margin-bottom: 3rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+        .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out both;
+        }
+        .card:nth-child(1) { animation-delay: 0.3s; }
+        .card:nth-child(2) { animation-delay: 0.4s; }
+        .card:nth-child(3) { animation-delay: 0.5s; }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 20px 20px 0 0;
+        }
+        .card:nth-child(1)::before { background: linear-gradient(90deg, #3b82f6, #06b6d4); }
+        .card:nth-child(2)::before { background: linear-gradient(90deg, #10b981, #34d399); }
+        .card:nth-child(3)::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+        .card-icon { font-size: 3rem; margin-bottom: 1rem; }
+        .card-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .card-track {
+            font-size: 0.85rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+        .card:nth-child(1) .card-track { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .card:nth-child(2) .card-track { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+        .card:nth-child(3) .card-track { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .card-desc { font-size: 0.95rem; color: #94a3b8; line-height: 1.7; }
+        .card-btn {
+            margin-top: 1.5rem;
+            padding: 0.6rem 1.5rem;
+            border-radius: 12px;
+            border: none;
+            font-family: 'Tajawal', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .card:nth-child(1) .card-btn { background: linear-gradient(135deg, #3b82f6, #06b6d4); }
+        .card:nth-child(2) .card-btn { background: linear-gradient(135deg, #10b981, #34d399); }
+        .card:nth-child(3) .card-btn { background: linear-gradient(135deg, #f59e0b, #f97316); }
+        .card-btn:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        .footer {
+            color: #64748b;
+            font-size: 0.85rem;
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+            line-height: 2;
+        }
+        .footer a { color: #10b981; text-decoration: none; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">♻️ EcoSort</div>
+        <div class="subtitle">منظومة الفرز الذكي وإعادة التدوير المتكاملة</div>
+        <div class="badge">🏆 هاكاثون الجامعة المصرية الصينية 2026 — "نُعيد.. نُبدع.. نَبني"</div>
+
+        <div class="cards">
+            <a href="dashboard.html" class="card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">لوحة التحكم الإدارية</div>
+                <div class="card-track">مسار التقنية الذكية</div>
+                <div class="card-desc">لوحة تحكم لحظية لمراقبة السلال الذكية والإحصائيات والإشعارات والتقارير البيئية</div>
+                <button class="card-btn">عرض النموذج ←</button>
+            </a>
+
+            <a href="bin-simulation.html" class="card">
+                <div class="card-icon">⚙️</div>
+                <div class="card-title">محاكاة السلة الذكية</div>
+                <div class="card-track">مسار الابتكار الهندسي</div>
+                <div class="card-desc">محاكاة تفاعلية لآلية عمل القرص الدوّار والفرز التلقائي بالذكاء الاصطناعي</div>
+                <button class="card-btn">عرض النموذج ←</button>
+            </a>
+
+            <a href="student-app.html" class="card">
+                <div class="card-icon">📱</div>
+                <div class="card-title">تطبيق الطالب</div>
+                <div class="card-track">مسار التصميم الإبداعي</div>
+                <div class="card-desc">تطبيق تفاعلي بنظام النقاط والمكافآت وشجرة الاستدامة والتحديات الأسبوعية</div>
+                <button class="card-btn">عرض النموذج ←</button>
+            </a>
+        </div>
+
+        <div class="footer">
+            مشروع EcoSort — "ارمِ بذكاء... وازرع مستقبلاً" 🌳<br>
+            مسابقة إدارة المخلفات الجامعية 2026 — صندوق رعاية المبتكرين والنوابغ
+        </div>
+    </div>
+</body>
+</html>
