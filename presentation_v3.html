@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSort Pitch Deck</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --accent: #f59e0b;
+            --bg-dark: #0f172a;
+            --bg-darker: #020617;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --glass-bg: rgba(30, 41, 59, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-darker);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.15), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.15), transparent 25%);
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+            transform: scale(0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem;
+            z-index: 1;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            z-index: 10;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 3rem;
+            max-width: 1200px;
+            width: 100%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .title {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            align-items: center;
+        }
+        
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+        }
+
+        .icon-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--glass-border);
+            padding: 2rem;
+            border-radius: 16px;
+            text-align: center;
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .icon-box:hover {
+            transform: translateY(-10px);
+            background: rgba(255,255,255,0.08);
+            border-color: var(--primary);
+        }
+
+        .icon-box i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+
+        .icon-box h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .icon-box p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        ul.feature-list {
+            list-style: none;
+        }
+
+        ul.feature-list li {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            font-size: 1.2rem;
+            line-height: 1.5;
+        }
+
+        ul.feature-list li i {
+            color: var(--primary);
+            margin-right: 1rem;
+            margin-top: 0.2rem;
+            font-size: 1.5rem;
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Controls */
+        .controls {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-nav {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--glass-border);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn-nav:hover {
+            background: var(--primary);
+            transform: scale(1.1);
+        }
+
+        .progress-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            z-index: 100;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+
+        .slide-number {
+            position: fixed;
+            bottom: 2.5rem;
+            left: 2rem;
+            z-index: 100;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .team-member {
+            text-align: center;
+        }
+        
+        .team-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--bg-dark), var(--glass-bg));
+            border: 2px solid var(--primary);
+            margin: 0 auto 1rem auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            color: var(--text-muted);
+        }
+
+        .metric {
+            font-size: 4rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        canvas {
+            max-height: 350px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+    <div class="slide-number" id="slideNumber">1 / 10</div>
+
+    <!-- Controls -->
+    <div class="controls">
+        <button class="btn-nav" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+        <button class="btn-nav" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <!-- Slide 1: The Hook -->
+    <div class="slide active">
+        <div class="glass-card" style="text-align: center; border-top: 4px solid var(--primary);">
+            <h1 class="title" style="font-size: 6rem; margin-bottom: 0;">EcoSort</h1>
+            <p class="subtitle" style="font-size: 2rem; margin-bottom: 3rem;">The Future of Intelligent Waste Recovery</p>
+            <div style="max-width: 800px; margin: 0 auto;">
+                <iframe src="https://drive.google.com/file/d/1M6OFAtFrEHHOyeEQWlzom0anUbV9UjAb/preview" width="100%" height="480" allow="autoplay" style="border-radius: 16px; border: 1px solid var(--glass-border); box-shadow: 0 10px 30px rgba(0,0,0,0.5);"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 2: The Core Problem -->
+    <div class="slide">
+        <div class="glass-card">
+            <h2 class="title" style="font-size: 3.5rem;">The Core Problem</h2>
+            <div class="grid-2">
+                <div>
+                    <p class="subtitle">Waste mixing is destroying economic value before it even reaches the recycling plant.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-times-circle" style="color: #ef4444;"></i> <strong>Contamination:</strong> 70% of recyclables are ruined by organic waste mixing.</li>
+                        <li><i class="fas fa-times-circle" style="color: #ef4444;"></i> <strong>Lost Revenue:</strong> Millions of dollars burned in manual sorting facilities.</li>
+                        <li><i class="fas fa-times-circle" style="color: #ef4444;"></i> <strong>Inefficient Logistics:</strong> Bins are collected whether empty or overflowing, wasting fuel and time.</li>
+                    </ul>
+                </div>
+                <div class="icon-box" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.05);">
+                    <i class="fas fa-dumpster-fire" style="color: #ef4444; font-size: 5rem;"></i>
+                    <h3 style="font-size: 2rem; margin-top: 1rem;">$120B+</h3>
+                    <p>Annual global economic value lost due to improper sorting at source.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Phase 1 - The Smart Bin -->
+    <div class="slide">
+        <div class="glass-card">
+            <h2 class="title" style="font-size: 3.5rem;">Phase 1: The Smart Bin</h2>
+            <p class="subtitle">Solving sorting at the exact moment of disposal.</p>
+            <div class="grid-3">
+                <div class="icon-box">
+                    <i class="fas fa-brain"></i>
+                    <h3>AI Classification</h3>
+                    <p>Computer vision instantly identifies waste type (Plastic, Metal, Organic, Paper) with 98% accuracy.</p>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-sync"></i>
+                    <h3>Rotating Disk</h3>
+                    <p>Patented mechanical routing automatically directs the item into the correct internal compartment.</p>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-hand-pointer"></i>
+                    <h3>Interactive Screen</h3>
+                    <p>Active learning feedback loop. If the AI is unsure, the user taps the screen to train the model.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: The Engagement Pivot -->
+    <div class="slide">
+        <div class="glass-card" style="text-align: center;">
+            <h2 class="title" style="font-size: 3.5rem; background: linear-gradient(to right, #ef4444, #f59e0b); -webkit-background-clip: text;">The Engagement Pivot</h2>
+            <p class="subtitle" style="font-size: 1.8rem;">We realized a harsh truth...</p>
+            
+            <div style="background: rgba(255,255,255,0.05); padding: 3rem; border-radius: 16px; margin: 2rem 0;">
+                <i class="fas fa-mobile-alt" style="font-size: 4rem; color: #94a3b8; margin-bottom: 1rem;"></i>
+                <h3 style="font-size: 2.5rem; margin-bottom: 1rem;">"Points apps" get boring.</h3>
+                <p style="font-size: 1.5rem; color: var(--text-muted);">Users download them, recycle a few times for a coffee discount, get bored, and delete the app.</p>
+            </div>
+            
+            <h3 style="font-size: 2rem; color: var(--primary);">We needed something <span class="highlight">deeper.</span></h3>
+        </div>
+    </div>
+
+    <!-- Slide 5: Phase 2 - The Eco-Community -->
+    <div class="slide">
+        <div class="glass-card">
+            <h2 class="title" style="font-size: 3.5rem;">Phase 2: The Eco-Community</h2>
+            <p class="subtitle">Strava for Sustainability. Building tribal engagement.</p>
+            <div class="grid-2">
+                <ul class="feature-list">
+                    <li><i class="fas fa-chart-line"></i> <strong>Real Impact Tracking:</strong> Visualizing carbon offset, water saved, and trees equivalent, not just points.</li>
+                    <li><i class="fas fa-users"></i> <strong>Offline Events:</strong> Unlocking access to exclusive tree-planting and beach clean-up events.</li>
+                    <li><i class="fas fa-certificate"></i> <strong>CV-Ready Certificates:</strong> Official community service certificates for students, backed by NGOs and corporate partners.</li>
+                    <li><i class="fas fa-trophy"></i> <strong>Leaderboards:</strong> Inter-faculty and inter-university sustainability leagues.</li>
+                </ul>
+                <div class="icon-box" style="background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(59,130,246,0.1)); border: 1px solid var(--primary);">
+                    <i class="fas fa-leaf" style="font-size: 4rem;"></i>
+                    <h3 style="font-size: 2rem; margin: 1rem 0;">Status over Discounts</h3>
+                    <p>Shifting the motivation from extrinsic (cheap rewards) to intrinsic (identity, community, and official recognition).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: The Scaling Masterplan (B2B) -->
+    <div class="slide">
+        <div class="glass-card">
+            <h2 class="title" style="font-size: 3.5rem;">The Scaling Masterplan</h2>
+            <p class="subtitle">Turning universities into mini supply-chain hubs.</p>
+            <div class="grid-2">
+                <div>
+                    <p style="font-size: 1.2rem; line-height: 1.6; color: var(--text-muted); margin-bottom: 2rem;">We are partnering with major recycling giants like <strong>BariQ</strong> and <strong>GoClean</strong>. Instead of them hunting for scattered recyclables, we provide a centralized, pre-sorted pipeline.</p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-industry"></i> <strong>Zero Sorting Costs:</strong> Material is 99% pure upon collection.</li>
+                        <li><i class="fas fa-truck-loading"></i> <strong>Optimized Logistics:</strong> Bins trigger pickup requests only when full.</li>
+                        <li><i class="fas fa-hand-holding-usd"></i> <strong>Revenue Sharing:</strong> The university earns a cut of the bulk material sales.</li>
+                    </ul>
+                </div>
+                <div style="background: rgba(255,255,255,0.02); padding: 2rem; border-radius: 16px; border: 1px dashed var(--secondary);">
+                    <h3 style="text-align: center; margin-bottom: 1.5rem; color: var(--secondary);">The Flow</h3>
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="background: rgba(16,185,129,0.2); padding: 1rem; border-radius: 8px; text-align: center;">Students Dispose via EcoSort</div>
+                        <div style="text-align: center;"><i class="fas fa-arrow-down" style="color: var(--text-muted);"></i></div>
+                        <div style="background: rgba(59,130,246,0.2); padding: 1rem; border-radius: 8px; text-align: center;">University Accumulates Pre-Sorted Tons</div>
+                        <div style="text-align: center;"><i class="fas fa-arrow-down" style="color: var(--text-muted);"></i></div>
+                        <div style="background: rgba(245,158,11,0.2); padding: 1rem; border-radius: 8px; text-align: center;">Direct Sale to BariQ/GoClean</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Hyper-Local Circular Economy -->
+    <div class="slide">
+        <div class="glass-card" style="border-top: 4px solid var(--accent);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 class="title" style="font-size: 3rem; margin: 0;">Hyper-Local Circular Economy</h2>
+                <span style="background: var(--accent); color: #000; padding: 0.5rem 1rem; border-radius: 20px; font-weight: bold; font-size: 0.9rem;">NEW FEATURE</span>
+            </div>
+            <p class="subtitle">Closing the loop right on campus.</p>
+            
+            <div class="grid-3" style="margin-top: 3rem;">
+                <div class="icon-box">
+                    <i class="fas fa-bottle-water"></i>
+                    <h3>1. Collect</h3>
+                    <p>PET plastic bottles collected and shredded on-site via our advanced bins.</p>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-fire-burner"></i>
+                    <h3>2. Extrude</h3>
+                    <p>Shredded plastic is melted and extruded into high-quality 3D printing filament.</p>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-cube"></i>
+                    <h3>3. Create</h3>
+                    <p>Filament sold/provided to engineering & architecture students for their prototypes.</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <p style="font-size: 1.5rem; font-weight: 600; color: var(--primary);">Waste never leaves the campus. It becomes the building block for innovation.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Business Model & Unit Economics -->
+    <div class="slide">
+        <div class="glass-card">
+            <h2 class="title" style="font-size: 3.5rem;">Business Model</h2>
+            <p class="subtitle">Diverse revenue streams and fast ROI.</p>
+            
+            <div class="grid-2">
+                <div>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-money-bill-wave"></i> <strong>B2B Bulk Sales:</strong> Selling high-purity sorted plastics and metals to recyclers.</li>
+                        <li><i class="fas fa-dharmachakra"></i> <strong>3D Filament Sales:</strong> High-margin recycled filament sold to university labs.</li>
+                        <li><i class="fas fa-desktop"></i> <strong>Dashboard SaaS:</strong> Subscription fee for universities to access ESG data, waste analytics, and carbon offset reports.</li>
+                    </ul>
+                    <div style="margin-top: 2rem; background: rgba(16,185,129,0.1); padding: 1.5rem; border-radius: 12px; border-left: 4px solid var(--primary);">
+                        <h3 style="color: var(--primary); margin-bottom: 0.5rem;">Unit Economics</h3>
+                        <p style="font-size: 1.2rem;">Hardware cost recouped. <strong>Break-even in &lt; 3 months</strong> per bin installation.</p>
+                    </div>
+                </div>
+                <div>
+                    <!-- Chart placeholder -->
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Team -->
+    <div class="slide">
+        <div class="glass-card">
+            <h2 class="title" style="font-size: 3.5rem;">The Team</h2>
+            <p class="subtitle">Engineers and visionaries building a sustainable future.</p>
+            
+            <div class="grid-4" style="margin-top: 3rem;">
+                <div class="team-member">
+                    <div class="team-avatar"><i class="fas fa-user"></i></div>
+                    <h3>Member 1</h3>
+                    <p style="color: var(--primary);">CEO & Founder</p>
+                </div>
+                <div class="team-member">
+                    <div class="team-avatar"><i class="fas fa-user"></i></div>
+                    <h3>Member 2</h3>
+                    <p style="color: var(--primary);">CTO (AI & Vision)</p>
+                </div>
+                <div class="team-member">
+                    <div class="team-avatar"><i class="fas fa-user"></i></div>
+                    <h3>Member 3</h3>
+                    <p style="color: var(--primary);">COO (Operations)</p>
+                </div>
+                <div class="team-member">
+                    <div class="team-avatar"><i class="fas fa-user"></i></div>
+                    <h3>Member 4</h3>
+                    <p style="color: var(--primary);">CMO (Community)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 10: Closing -->
+    <div class="slide">
+        <div class="glass-card" style="text-align: center; border-bottom: 4px solid var(--primary);">
+            <h2 class="title" style="font-size: 4rem;">Join the Revolution</h2>
+            <p class="subtitle" style="font-size: 2rem; margin-bottom: 3rem;">Let's redefine the value of waste.</p>
+            
+            <div class="grid-2" style="max-width: 800px; margin: 0 auto; text-align: left;">
+                <div class="icon-box">
+                    <i class="fas fa-rocket"></i>
+                    <h3>The Ask</h3>
+                    <p>Seed funding to manufacture the next 100 Smart Bins, scale our B2B SaaS dashboard, and expand our campus footprint.</p>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-globe"></i>
+                    <h3>The Vision</h3>
+                    <p>To be the decentralized operating system for global waste management and micro-circular economies.</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 4rem;">
+                <h3 style="font-size: 2.5rem; background: linear-gradient(to right, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">ecosort.com</h3>
+                <p style="color: var(--text-muted); margin-top: 1rem;">contact@ecosort.com</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+            let currentSlide = 0;
+            
+            const progressBar = document.getElementById('progressBar');
+            const slideNumber = document.getElementById('slideNumber');
+            
+            function updateSlide() {
+                slides.forEach((slide, index) => {
+                    slide.classList.remove('active');
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                    }
+                });
+                
+                const progress = ((currentSlide + 1) / totalSlides) * 100;
+                progressBar.style.width = progress + '%';
+                slideNumber.textContent = (currentSlide + 1) + ' / ' + totalSlides;
+            }
+
+            document.getElementById('prevBtn').addEventListener('click', () => {
+                if (currentSlide > 0) {
+                    currentSlide--;
+                    updateSlide();
+                }
+            });
+
+            document.getElementById('nextBtn').addEventListener('click', () => {
+                if (currentSlide < totalSlides - 1) {
+                    currentSlide++;
+                    updateSlide();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'Spacebar' || e.key === ' ') {
+                    if (currentSlide < totalSlides - 1) {
+                        currentSlide++;
+                        updateSlide();
+                    }
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    if (currentSlide > 0) {
+                        currentSlide--;
+                        updateSlide();
+                    }
+                }
+            });
+
+            // Initialize chart on Slide 8
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['B2B Bulk Sales', '3D Filament', 'SaaS Subscriptions'],
+                    datasets: [{
+                        data: [55, 30, 15],
+                        backgroundColor: [
+                            '#10b981', // primary
+                            '#f59e0b', // accent
+                            '#3b82f6'  // secondary
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#f8fafc',
+                                font: {
+                                    family: "'Inter', sans-serif",
+                                    size: 14
+                                }
+                            }
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+            
+            updateSlide();
+        });
+    </script>
+</body>
+</html>
