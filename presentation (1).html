@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoSort - Smart Waste Sorting</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --primary: #10b981;
+            --secondary: #3b82f6;
+            --accent: #f59e0b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(16, 185, 129, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(59, 130, 246, 0.08), transparent 25%);
+        }
+
+        #progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.4s ease-out;
+        }
+
+        #counter {
+            position: fixed;
+            bottom: 20px;
+            right: 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            z-index: 1000;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 40px 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0;
+            transform: translateX(100px);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            visibility: hidden;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: all;
+            visibility: visible;
+        }
+
+        .slide.prev {
+            transform: translateX(-100px);
+        }
+
+        .slide-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .center-slide {
+            align-items: center;
+            text-align: center;
+            justify-content: center;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .gradient-text-alt {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        h1 { font-size: 4.5rem; font-weight: 800; margin-bottom: 20px; line-height: 1.2; }
+        h2 { font-size: 3rem; font-weight: 700; margin-bottom: 30px; }
+        h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 12px; }
+        p { font-size: 1.1rem; line-height: 1.6; color: var(--text-muted); }
+
+        .subtitle {
+            font-size: 1.8rem;
+            color: var(--text-main);
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+
+        /* Glassmorphism Cards */
+        .glass-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .glass-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .grid-2x2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .grid-2col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        /* Staggered Animations */
+        .slide.active .stagger-1 { animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s forwards; opacity: 0; }
+        .slide.active .stagger-2 { animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.2s forwards; opacity: 0; }
+        .slide.active .stagger-3 { animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.3s forwards; opacity: 0; }
+        .slide.active .stagger-4 { animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.4s forwards; opacity: 0; }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .icon { font-size: 2.5rem; margin-bottom: 15px; }
+
+        .text-red { color: #ef4444; }
+        .text-amber { color: var(--accent); }
+        .text-blue { color: var(--secondary); }
+        .text-green { color: var(--primary); }
+
+        .border-t-blue { border-top: 4px solid var(--secondary); }
+        .border-t-green { border-top: 4px solid var(--primary); }
+        .border-t-amber { border-top: 4px solid var(--accent); }
+        .border-t-purple { border-top: 4px solid #a855f7; }
+
+        ul.styled-list {
+            list-style: none;
+        }
+        ul.styled-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+        ul.styled-list li::before {
+            content: "•";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 1.5rem;
+            line-height: 1;
+            top: 2px;
+        }
+
+        /* Engineering Innovation Circle */
+        .rotating-disk {
+            width: 180px;
+            height: 180px;
+            border: 3px solid var(--primary);
+            border-radius: 50%;
+            margin: 30px auto;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .disk-label {
+            position: absolute;
+            font-weight: 600;
+            font-size: 0.9rem;
+            background: var(--bg-dark);
+            padding: 2px 6px;
+        }
+        .disk-top { top: -12px; }
+        .disk-bottom { bottom: -12px; }
+        .disk-left { left: -15px; }
+        .disk-right { right: -15px; }
+        .disk-center { width: 10px; height: 10px; background: var(--secondary); border-radius: 50%; }
+
+        .cost-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .cost-table td { padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: var(--text-main); }
+        .cost-table tr:last-child td { border-bottom: none; font-weight: bold; color: var(--primary); font-size: 1.2rem; }
+        .cost-table td:last-child { text-align: right; }
+
+        .stat-card { text-align: center; padding: 30px 20px; }
+        .stat-card h2 { font-size: 3.5rem; margin-bottom: 10px; }
+
+        .team-circle {
+            width: 70px; height: 70px;
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: bold; margin: 0 auto 15px;
+        }
+        .bg-gradient-1 { background: linear-gradient(135deg, var(--primary), var(--secondary)); }
+        .bg-gradient-2 { background: linear-gradient(135deg, var(--secondary), #06b6d4); }
+        .bg-gradient-3 { background: linear-gradient(135deg, #a855f7, #6366f1); }
+        .bg-gradient-4 { background: linear-gradient(135deg, var(--accent), #f97316); }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 40px;
+            padding: 20px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+        }
+        .flow-step { text-align: center; font-size: 0.95rem; font-weight: 500; }
+        .flow-arrow { color: var(--text-muted); font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <div id="progress-container">
+        <div id="progress-bar"></div>
+    </div>
+    
+    <div id="counter">1 / 9</div>
+
+    <!-- Slide 1: Title -->
+    <div class="slide active center-slide">
+        <div class="slide-content stagger-1">
+            <div style="font-size: 5rem; margin-bottom: 20px;">♻️</div>
+            <h1 class="gradient-text">EcoSort</h1>
+            <p class="subtitle stagger-2">Smart Waste Sorting & Integrated Recycling System</p>
+            <div class="tag stagger-3" style="margin-top: 20px; margin-bottom: 20px;">University Waste Management Competition 2026</div>
+            <p class="stagger-4" style="font-size: 1.2rem; font-weight: 500;">Egyptian Chinese University — Internal Hackathon</p>
+            <p class="stagger-4" style="margin-top: 30px; font-style: italic; color: var(--primary);">"We Recycle.. We Innovate.. We Build"</p>
+        </div>
+    </div>
+
+    <!-- Slide 2: The Problem -->
+    <div class="slide">
+        <div class="slide-content">
+            <span class="tag stagger-1">The Problem</span>
+            <h2 class="stagger-1">University Waste: A Growing Crisis</h2>
+            
+            <div class="grid-2x2">
+                <div class="glass-card stagger-1">
+                    <div class="icon">🗑️</div>
+                    <h3 class="text-red">Zero Sorting at Source</h3>
+                    <p>All waste thrown into a single bin. No separation, no recycling, no value recovery.</p>
+                </div>
+                <div class="glass-card stagger-2">
+                    <div class="icon">💸</div>
+                    <h3 class="text-amber">Wasted Economic Resources</h3>
+                    <p>Recyclable materials worth thousands of EGP sent to landfills daily.</p>
+                </div>
+                <div class="glass-card stagger-3">
+                    <div class="icon">📊</div>
+                    <h3 class="text-blue">No Data or Monitoring</h3>
+                    <p>University has zero data on waste quantities, types, or collection patterns.</p>
+                </div>
+                <div class="glass-card stagger-4">
+                    <div class="icon">😞</div>
+                    <h3 class="text-green">No Student Engagement</h3>
+                    <p>No system to incentivize or reward students for proper waste disposal.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: Our Solution -->
+    <div class="slide">
+        <div class="slide-content">
+            <span class="tag stagger-1">Our Solution</span>
+            <h2 class="stagger-1">EcoSort: A Complete Ecosystem</h2>
+            <p class="subtitle stagger-1">One integrated solution covering all 4 competition tracks.</p>
+            
+            <div class="grid-4 stagger-2">
+                <div class="glass-card border-t-blue" style="text-align: center;">
+                    <div class="icon">🤖</div>
+                    <h3>Smart Technology</h3>
+                    <p style="font-size: 0.9rem;">AI + IoT + Dashboard</p>
+                </div>
+                <div class="glass-card border-t-green" style="text-align: center;">
+                    <div class="icon">⚙️</div>
+                    <h3>Engineering Innovation</h3>
+                    <p style="font-size: 0.9rem;">Rotating Disk + Modular</p>
+                </div>
+                <div class="glass-card border-t-amber" style="text-align: center;">
+                    <div class="icon">🎨</div>
+                    <h3>Creative Design</h3>
+                    <p style="font-size: 0.9rem;">Gamified App + Rewards</p>
+                </div>
+                <div class="glass-card border-t-purple" style="text-align: center;">
+                    <div class="icon">💼</div>
+                    <h3>Green Business</h3>
+                    <p style="font-size: 0.9rem;">Circular Economy</p>
+                </div>
+            </div>
+
+            <div class="flow-diagram stagger-3">
+                <div class="flow-step">Student drops waste</div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step">AI classifies</div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step">Auto-sorts</div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step">Sold to recyclers</div>
+                <div class="flow-arrow">➔</div>
+                <div class="flow-step" style="color: var(--primary);">Trees planted + Points earned</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: How It Works + Tech -->
+    <div class="slide">
+        <div class="slide-content">
+            <span class="tag stagger-1">How It Works</span>
+            <h2 class="stagger-1">Smart Sorting Process & AI Technology</h2>
+            
+            <div class="grid-2col">
+                <div class="stagger-2">
+                    <ul class="styled-list">
+                        <li><strong>Step 1:</strong> Student places waste in opening</li>
+                        <li><strong>Step 2:</strong> IR sensor detects the item</li>
+                        <li><strong>Step 3:</strong> Camera + AI classifies (95%+ accuracy)</li>
+                        <li><strong>Step 4:</strong> Servo rotates disk to correct angle</li>
+                        <li><strong>Step 5:</strong> Waste drops by gravity</li>
+                        <li><strong>Step 6:</strong> Data sent to cloud + points earned</li>
+                        <li><strong>Step 7:</strong> Auto-alert at 80% capacity</li>
+                    </ul>
+                    <div style="margin-top: 20px; padding: 10px 15px; background: rgba(16,185,129,0.1); border-left: 4px solid var(--primary); display: inline-block;">
+                        <strong>Note:</strong> Response time &lt; 2 seconds
+                    </div>
+                </div>
+                
+                <div class="glass-card stagger-3">
+                    <h3 style="margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">Technology Stack</h3>
+                    <ul class="styled-list" style="font-size: 0.95rem;">
+                        <li><strong>AI Model:</strong> YOLOv8 / MobileNetV2</li>
+                        <li><strong>Dataset:</strong> TrashNet (2,527 images) + local data</li>
+                        <li><strong>On-device:</strong> TensorFlow Lite — works offline</li>
+                        <li><strong>Dual validation:</strong> Camera + Metal sensor = 95%+ accuracy</li>
+                        <li><strong>IoT:</strong> ESP32 ➔ MQTT ➔ Firebase Cloud</li>
+                        <li><strong>Dashboard:</strong> Real-time map, charts, auto-alerts, reports</li>
+                        <li><strong>Smart route optimization:</strong> 30-45% fewer collection trips</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Engineering Innovation -->
+    <div class="slide">
+        <div class="slide-content">
+            <span class="tag stagger-1">Engineering Innovation</span>
+            <h2 class="stagger-1">Rotating Disk Mechanism</h2>
+            
+            <div class="grid-2col">
+                <div class="stagger-2" style="text-align: center;">
+                    <p style="text-align: left; margin-bottom: 20px;">A simple design using only one servo motor to sort into 4 compartments.</p>
+                    
+                    <div class="rotating-disk">
+                        <div class="disk-center"></div>
+                        <div class="disk-label disk-top">0° Plastic</div>
+                        <div class="disk-label disk-right">90° Paper</div>
+                        <div class="disk-label disk-bottom">180° Metal</div>
+                        <div class="disk-label disk-left">270° Organic</div>
+                    </div>
+                    
+                    <p style="font-style: italic;">Disk has one opening — rotates to correct compartment</p>
+                </div>
+                
+                <div class="glass-card stagger-3">
+                    <ul class="styled-list" style="margin-bottom: 20px;">
+                        <li><strong>Single motor:</strong> 1 servo (MG996R) — simple & reliable</li>
+                        <li><strong>Low cost:</strong> Mechanism &lt; 500 EGP</li>
+                        <li><strong>Modular:</strong> 3 detachable units for easy maintenance</li>
+                        <li><strong>Local manufacturing:</strong> All parts available in Egypt</li>
+                        <li><strong>Fast:</strong> Sorting in &lt; 2 seconds</li>
+                    </ul>
+                    
+                    <table class="cost-table">
+                        <tr><td>Raspberry Pi 4</td><td>2,500 EGP</td></tr>
+                        <tr><td>Arduino + Sensors + Servo</td><td>550 EGP</td></tr>
+                        <tr><td>ESP32 + Camera</td><td>550 EGP</td></tr>
+                        <tr><td>Structure + LCD + LEDs</td><td>900 EGP</td></tr>
+                        <tr><td>TOTAL</td><td>~4,500 EGP</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: Creative Design + Business -->
+    <div class="slide">
+        <div class="slide-content">
+            <span class="tag stagger-1">Creative Design & Business Model</span>
+            <h2 class="stagger-1">Gamification + Circular Economy</h2>
+            
+            <div class="grid-2col">
+                <div class="stagger-2">
+                    <h3 style="color: var(--primary);">Creative Design</h3>
+                    <div class="grid-2x2" style="gap: 15px; margin-bottom: 20px;">
+                        <div class="glass-card" style="padding: 15px;">
+                            <strong style="display: block; margin-bottom: 5px;">Sustainability Tree</strong>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">Virtual tree grows ➔ Real tree planted</span>
+                        </div>
+                        <div class="glass-card" style="padding: 15px;">
+                            <strong style="display: block; margin-bottom: 5px;">Points & Rewards</strong>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">Sort = points ➔ Redeem for rewards</span>
+                        </div>
+                        <div class="glass-card" style="padding: 15px;">
+                            <strong style="display: block; margin-bottom: 5px;">Leaderboard</strong>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">Students & faculties compete</span>
+                        </div>
+                        <div class="glass-card" style="padding: 15px;">
+                            <strong style="display: block; margin-bottom: 5px;">Weekly Challenges</strong>
+                            <span style="font-size: 0.85rem; color: var(--text-muted);">Bonus tasks for extra points</span>
+                        </div>
+                    </div>
+                    <div style="padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                        <strong>Bin Features:</strong> LCD screen with messages + color LED per waste type
+                    </div>
+                </div>
+                
+                <div class="stagger-3">
+                    <h3 style="color: var(--secondary);">Green Business Model</h3>
+                    <div class="glass-card" style="margin-bottom: 15px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr><td style="padding: 5px 0;">Plastic</td><td style="text-align: right;">12-25 EGP/kg</td></tr>
+                            <tr><td style="padding: 5px 0;"><strong>Aluminum</strong></td><td style="text-align: right;"><strong>110+ EGP/kg</strong></td></tr>
+                            <tr><td style="padding: 5px 0;">Paper</td><td style="text-align: right;">6-9 EGP/kg</td></tr>
+                        </table>
+                    </div>
+                    
+                    <p style="margin-bottom: 10px;"><strong>Revenue Distribution:</strong></p>
+                    <div style="display: flex; height: 12px; border-radius: 6px; overflow: hidden; margin-bottom: 20px;">
+                        <div style="width: 40%; background: var(--primary);" title="40% Trees"></div>
+                        <div style="width: 30%; background: var(--accent);" title="30% Rewards"></div>
+                        <div style="width: 20%; background: var(--secondary);" title="20% Maintenance"></div>
+                        <div style="width: 10%; background: #94a3b8;" title="10% Reserve"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 20px;">
+                        <span>Trees 40%</span><span>Rewards 30%</span><span>Maint. 20%</span><span>Res. 10%</span>
+                    </div>
+
+                    <div style="background: rgba(16,185,129,0.2); border: 1px solid var(--primary); color: #fff; padding: 12px; border-radius: 8px; text-align: center; font-weight: bold; margin-bottom: 15px;">
+                        Break-even &lt; 3 months!
+                    </div>
+                    
+                    <p style="font-size: 0.9rem;"><strong>Phases:</strong> Pilot ➔ Campus ➔ Multi-Uni (SaaS) ➔ Startup</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Impact -->
+    <div class="slide">
+        <div class="slide-content">
+            <span class="tag stagger-1">Impact</span>
+            <h2 class="stagger-1">Measurable Environmental & Economic Impact — Year 1</h2>
+            
+            <div class="grid-4 stagger-2">
+                <div class="glass-card stat-card">
+                    <h2 class="gradient-text">90%+</h2>
+                    <p>Correct Sorting<br><span style="font-size: 0.8rem;">(vs 0% today)</span></p>
+                </div>
+                <div class="glass-card stat-card">
+                    <h2 class="gradient-text-alt">5-10</h2>
+                    <p>Tons CO2 Saved<br><span style="font-size: 0.8rem;">per year</span></p>
+                </div>
+                <div class="glass-card stat-card">
+                    <h2 class="gradient-text" style="background: linear-gradient(135deg, #10b981, #84cc16); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">50</h2>
+                    <p>Trees Planted<br><span style="font-size: 0.8rem;">on campus</span></p>
+                </div>
+                <div class="glass-card stat-card">
+                    <h2 class="gradient-text" style="background: linear-gradient(135deg, #f59e0b, #fbbf24); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">36K</h2>
+                    <p>EGP/month<br><span style="font-size: 0.8rem;">revenue (15 bins)</span></p>
+                </div>
+            </div>
+
+            <div class="grid-4 stagger-3" style="grid-template-columns: repeat(3, 1fr); margin-top: 20px;">
+                <div class="glass-card" style="text-align: center; padding: 15px;">
+                    <strong style="color: var(--text-main);">24-60 tons/year</strong>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">Waste diverted from landfills</div>
+                </div>
+                <div class="glass-card" style="text-align: center; padding: 15px;">
+                    <strong style="color: var(--text-main);">30-45% fewer</strong>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">Collection trips</div>
+                </div>
+                <div class="glass-card" style="text-align: center; padding: 15px;">
+                    <strong style="color: var(--text-main);">40-60%</strong>
+                    <div style="font-size: 0.9rem; margin-top: 5px;">Student participation</div>
+                </div>
+            </div>
+            
+            <p class="stagger-4" style="text-align: center; margin-top: 30px; font-weight: 500;">
+                Supports ECU ranking in UI GreenMetric World University Rankings
+            </p>
+        </div>
+    </div>
+
+    <!-- Slide 8: Team -->
+    <div class="slide">
+        <div class="slide-content">
+            <span class="tag stagger-1">Our Team</span>
+            <h2 class="stagger-1">The Team Behind EcoSort</h2>
+            <p class="subtitle stagger-1">4 passionate students from the Egyptian Chinese University.</p>
+            
+            <div class="grid-4 stagger-2" style="margin-top: 40px;">
+                <div class="glass-card" style="text-align: center;">
+                    <img src="Ibrahim Mohamed.jpeg" alt="Ibrahim Mohamed" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px; display: block; border: 3px solid var(--primary);">
+                    <h3>Ibrahim Mohamed</h3>
+                </div>
+                <div class="glass-card" style="text-align: center;">
+                    <img src="Hager Saeed.jpeg" alt="Hager Saeed" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px; display: block; border: 3px solid var(--secondary);">
+                    <h3>Hager Saeed</h3>
+                </div>
+                <div class="glass-card" style="text-align: center;">
+                    <img src="Sama Aaref.jpeg" alt="Sama Aaref" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px; display: block; border: 3px solid #a855f7;">
+                    <h3>Sama Aaref</h3>
+                </div>
+                <div class="glass-card" style="text-align: center;">
+                    <img src="Aliaa Ehab.jpeg" alt="Aliaa Ehab" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 0 auto 15px; display: block; border: 3px solid var(--accent);">
+                    <h3>Aliaa Ehab</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Closing -->
+    <div class="slide center-slide">
+        <div class="slide-content stagger-1">
+            <div style="font-size: 5rem; margin-bottom: 20px;">🌱</div>
+            <h1 class="gradient-text">Sort Smart. Grow Green.</h1>
+            <p class="subtitle stagger-2" style="max-width: 800px; margin: 0 auto 40px; font-style: italic;">
+                "EcoSort transforms campus waste from an environmental burden into an economic opportunity."
+            </p>
+            
+            <div class="grid-4 stagger-3" style="grid-template-columns: repeat(3, 1fr); max-width: 900px; margin: 0 auto 40px;">
+                <div class="glass-card stat-card" style="padding: 20px;">
+                    <h2 class="gradient-text" style="font-size: 2.5rem; margin-bottom: 5px;">4,500</h2>
+                    <p style="font-size: 0.9rem;">EGP prototype cost</p>
+                </div>
+                <div class="glass-card stat-card" style="padding: 20px;">
+                    <h2 class="gradient-text" style="font-size: 2.5rem; margin-bottom: 5px;">&lt; 3</h2>
+                    <p style="font-size: 0.9rem;">Months to break-even</p>
+                </div>
+                <div class="glass-card stat-card" style="padding: 20px;">
+                    <h2 class="gradient-text" style="font-size: 2.5rem; margin-bottom: 5px;">4/4</h2>
+                    <p style="font-size: 0.9rem;">Tracks covered</p>
+                </div>
+            </div>
+            
+            <h3 class="stagger-4" style="color: var(--primary); margin-bottom: 20px;">EcoSort — Throw Smart... Plant a Future</h3>
+            <p class="stagger-4" style="font-size: 1.5rem; font-weight: bold; color: #fff;">Thank you! Questions?</p>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const progressBar = document.getElementById('progress-bar');
+        const counter = document.getElementById('counter');
+        let currentSlide = 0;
+
+        function updateSlides() {
+            slides.forEach((slide, index) => {
+                slide.classList.remove('active', 'prev');
+                
+                if (index === currentSlide) {
+                    slide.classList.add('active');
+                } else if (index < currentSlide) {
+                    slide.classList.add('prev');
+                }
+            });
+
+            // Update Progress Bar
+            const progress = ((currentSlide) / (slides.length - 1)) * 100;
+            progressBar.style.width = `${progress}%`;
+            
+            // Update Counter
+            counter.textContent = `${currentSlide + 1} / ${slides.length}`;
+        }
+
+        function nextSlide() {
+            if (currentSlide < slides.length - 1) {
+                currentSlide++;
+                updateSlides();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlides();
+            }
+        }
+
+        // Keyboard Navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'ArrowDown') {
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                prevSlide();
+            }
+        });
+
+        // Click Navigation
+        document.addEventListener('click', (e) => {
+            const width = window.innerWidth;
+            if (e.clientX > width / 2) {
+                nextSlide();
+            } else {
+                prevSlide();
+            }
+        });
+
+        // Touch Swipe Navigation
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+
+        function handleSwipe() {
+            const threshold = 50;
+            if (touchStartX - touchEndX > threshold) {
+                nextSlide(); // Swipe left -> next
+            } else if (touchEndX - touchStartX > threshold) {
+                prevSlide(); // Swipe right -> prev
+            }
+        }
+
+        // Initialize
+        updateSlides();
+    </script>
+</body>
+</html>
