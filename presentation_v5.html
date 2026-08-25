@@ -465,10 +465,16 @@
                         <li><i class="fas fa-desktop"></i> <strong>Dashboard SaaS:</strong> Subscription fee for universities to access ESG data, waste analytics, and carbon offset reports.</li>
                         <li><i class="fas fa-handshake"></i> <strong>Sponsorships & Events:</strong> Direct revenue from eco-partnerships and university events.</li>
                     </ul>
-                    
                 </div>
+                <div>
+                    <!-- Chart placeholder -->
+                    <canvas id="revenueChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Slide 9: Financial Projections -->
+        <!-- Slide 9: Financial Case Study -->
     <div class="slide">
         <div class="glass-card">
             <h2 class="title" style="font-size: 3.5rem;">Financial Case Study</h2>
@@ -489,12 +495,6 @@
             
             <div style="margin-top: 3rem; text-align: center; background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px;">
                 <p style="font-size: 1.3rem; color: var(--text-muted); margin: 0;"><i class="fas fa-info-circle" style="color: var(--primary);"></i> Revenue generated from sorted materials (Aluminum/Plastics), sponsorships, and events.</p>
-            </div>
-        </div>
-    </div>                <div>
-                    <!-- Chart placeholder -->
-                    <canvas id="revenueChart"></canvas>
-                </div>
             </div>
         </div>
     </div>
@@ -647,7 +647,8 @@
                         backgroundColor: [
                             '#10b981', // primary
                             '#f59e0b', // accent
-                            '#3b82f6', '#ec4899'],
+                            '#3b82f6'  // secondary
+                        ],
                         borderWidth: 0,
                         hoverOffset: 10
                     }]
@@ -676,7 +677,6 @@
     </script>
 </body>
 </html>
-
 
 
 
